@@ -2,12 +2,15 @@
 
 # dependencies
 node_modules/
-
+opencode.json
+.env
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+nativewind-env.d.ts
+types/
 
 # Native
 .kotlin/
