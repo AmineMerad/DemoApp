@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { authService } from './auth';
-
-const API_BASE_URL = 'http://localhost:8000/api';
+import { API_URL } from '../config';
 
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
 });
 
 // Request interceptor to add token

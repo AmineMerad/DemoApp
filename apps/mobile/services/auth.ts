@@ -1,7 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-
-const API_URL = "http://localhost:8000/api";
+import { API_URL } from "../config";
 
 export interface User {
   id: number;

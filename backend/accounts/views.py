@@ -9,6 +9,12 @@ from .models import UserProfile
 from .serializers import ProfileSerializer
 import re
 
+def get_avatar_url(request, profile, user):
+    if profile.avatar and profile.avatar.storage.exists(profile.avatar.name):
+        return request.build_absolute_uri(profile.avatar.url)
+    name = user.first_name or user.email.split('@')[0]
+    return f'https://ui-avatars.com/api/?name={name}&background=16D1A6&color=fff&size=200'
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -45,7 +51,7 @@ def register(request):
     refresh = RefreshToken.for_user(user)
     
     # Auto-create profile
-    UserProfile.objects.get_or_create(user=user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
     
     return Response({
         'access': str(refresh.access_token),
@@ -54,7 +60,7 @@ def register(request):
             'id': user.id,
             'email': user.email,
             'name': user.first_name or user.username,
-            'avatar': None,
+            'avatar': get_avatar_url(request, profile, user),
         }
     }, status=status.HTTP_201_CREATED)
 
@@ -92,7 +98,7 @@ def login(request):
             'id': user.id,
             'email': user.email,
             'name': user.first_name or user.username,
-            'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+            'avatar': get_avatar_url(request, profile, user),
         }
     })
 
@@ -118,7 +124,7 @@ def me(request):
         'id': request.user.id,
         'email': request.user.email,
         'name': request.user.first_name or request.user.username,
-        'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+        'avatar': get_avatar_url(request, profile, request.user),
     })
 
 @api_view(['PATCH'])
@@ -134,6 +140,6 @@ def update_profile(request):
             'id': request.user.id,
             'email': request.user.email,
             'name': request.user.first_name or request.user.username,
-            'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+            'avatar': get_avatar_url(request, profile, request.user),
         })
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
