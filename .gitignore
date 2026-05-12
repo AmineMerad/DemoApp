@@ -19,5 +19,8 @@ db.sqlite3
 .env.local
 opencode.json
 
+# NativeWind generated
+nativewind-env.d.ts
+
 # macOS
 .DS_Store

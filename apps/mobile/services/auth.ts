@@ -7,6 +7,7 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  avatar?: string | null;
 }
 
 interface AuthResponse {
@@ -78,6 +79,40 @@ class AuthService {
 
     await this.setStoredUser(response.data);
     return response.data;
+  }
+
+  async updateProfile(data: { name?: string; avatar?: string }): Promise<User> {
+    const token = await this.getAccessToken();
+    if (!token) throw new Error("Not authenticated");
+
+    const formData = new FormData();
+    if (data.name) {
+      formData.append("name", data.name);
+    }
+    if (data.avatar) {
+      const filename = data.avatar.split("/").pop() || "avatar.jpg";
+      const ext = filename.split(".").pop() || "jpg";
+      formData.append("avatar", {
+        uri: data.avatar,
+        type: `image/${ext === "png" ? "png" : "jpeg"}`,
+        name: filename,
+      } as any);
+    }
+
+    const response = await axios.patch<User>(
+      `${API_URL}/auth/profile/`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    const user = response.data;
+    await AsyncStorage.setItem("user", JSON.stringify(user));
+    return user;
   }
 
   async getAccessToken(): Promise<string | null> {

@@ -1,10 +1,12 @@
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status, parsers
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from .models import UserProfile
+from .serializers import ProfileSerializer
 import re
 
 @api_view(['POST'])
@@ -42,13 +44,17 @@ def register(request):
     # Generate tokens
     refresh = RefreshToken.for_user(user)
     
+    # Auto-create profile
+    UserProfile.objects.get_or_create(user=user)
+    
     return Response({
         'access': str(refresh.access_token),
         'refresh': str(refresh),
         'user': {
             'id': user.id,
             'email': user.email,
-            'name': user.first_name or user.username
+            'name': user.first_name or user.username,
+            'avatar': None,
         }
     }, status=status.HTTP_201_CREATED)
 
@@ -77,13 +83,16 @@ def login(request):
     
     refresh = RefreshToken.for_user(user)
     
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    
     return Response({
         'access': str(refresh.access_token),
         'refresh': str(refresh),
         'user': {
             'id': user.id,
             'email': user.email,
-            'name': user.first_name or user.username
+            'name': user.first_name or user.username,
+            'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
         }
     })
 
@@ -103,9 +112,28 @@ def logout(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def me(request):
-    """Get current user info"""
+    """Get current user info including profile"""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
     return Response({
         'id': request.user.id,
         'email': request.user.email,
-        'name': request.user.first_name or request.user.username
+        'name': request.user.first_name or request.user.username,
+        'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
     })
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+@parser_classes([parsers.MultiPartParser, parsers.JSONParser])
+def update_profile(request):
+    """Update user profile (name, avatar)"""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    serializer = ProfileSerializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            'id': request.user.id,
+            'email': request.user.email,
+            'name': request.user.first_name or request.user.username,
+            'avatar': request.build_absolute_uri(profile.avatar.url) if profile.avatar else None,
+        })
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

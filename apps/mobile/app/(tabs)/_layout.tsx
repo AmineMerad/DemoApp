@@ -50,6 +50,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }: { color: string }) => <MaterialCommunityIcons name="history" size={24} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color }: { color: string }) => <MaterialCommunityIcons name="cog-outline" size={24} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

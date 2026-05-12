@@ -1,221 +1,171 @@
 # Wasat Investment Demo App
 
-A mobile application for managing Shariah-compliant investments. Built with React Native, Expo, and TypeScript.
+Investment tracker – React Native mobile app + Django backend.
 
-## Tech Stack
+Built for a full‑stack demo: authentication, portfolio management, transaction handling, and a clean mobile UI.
 
-- **Framework:** React Native 0.81.5 + Expo SDK 54
-- **Language:** TypeScript
-- **Routing:** Expo Router (file-based)
-- **Styling:** NativeWind v4 (Tailwind CSS for React Native)
-- **Fonts:** Montserrat (via `@expo-google-fonts/montserrat`)
-- **Icons:** MaterialCommunityIcons (`@expo/vector-icons`)
-- **New Architecture:** Enabled
+---
 
-## Quick Start
+## What's inside
 
-### Prerequisites
+- **Mobile**: React Native (Expo) + TypeScript + Tailwind (NativeWind)  
+- **Backend**: Django + Django REST Framework + JWT auth  
+- **Database**: SQLite for the demo (Django ORM – can switch to Postgres or MongoDB easily)  
+- **Monorepo**: pnpm workspaces with `apps/mobile` and `backend`
 
-- Node.js 18+
-- pnpm (required — this project uses pnpm exclusively)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- iOS: Xcode 16+ with Simulator
-- Android: Android Studio with an AVD
+The app lets a user:
+- Register / login (email + password)
+- View portfolio balance, cash, invested amount, and daily change
+- See top holdings with ESG / low‑carbon tags
+- Deposit money (updates balance instantly)
+- Withdraw money (checks available cash)
+- Rebalance portfolio (adjust allocation percentages)
+- Browse transaction history with filters (deposits, withdrawals, rebalances)
 
-### Install & Run
+All data comes from the Django API – no hard‑coded values.
 
-```sh
+---
+
+## Tech choices
+
+- **Django + DRF** – built‑in admin, migrations, auth. Quick to build a real backend.
+- **JWT via `djangorestframework-simplejwt`** – stateless, works well with mobile apps.
+- **SQLite** – zero setup for the demo. The ORM makes switching to Postgres or MongoDB trivial.
+- **Expo + NativeWind** – file‑based routing, Tailwind styling, no native compilation headaches.
+- **pnpm workspaces** – keeps backend and mobile in one repo.
+
+---
+
+## Running the whole thing
+
+Requirements: Node.js 18+, pnpm, Python 3.10+.
+
+```bash
+# Clone and install dependencies
 git clone <repo-url>
-cd DemoApp
+cd wasat-investment
 pnpm install
+
+# Backend
+cd backend
+python -m venv venv
+source venv/bin/activate      # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 8000
+
+# Mobile (new terminal)
+cd apps/mobile
+pnpm ios   # or pnpm android
 ```
 
-**iPhone 16 Pro Simulator:**
+Backend runs on `http://localhost:8000`.  
+Expo app opens in the simulator.
 
-```sh
-pnpm ios
-```
+> On a physical device, replace `localhost` with your computer's local IP in `apps/mobile/services/api.ts`.
 
-**Android Emulator:**
+---
 
-```sh
-pnpm android
-```
+## API endpoints (what the app calls)
 
-**Physical device (Expo Go):**
+All authenticated endpoints require `Bearer <access_token>` header.
 
-```sh
-pnpm start
-```
+**Auth**
+- `POST /api/auth/register/` – `{ email, password, name }` → returns access+refresh tokens + user
+- `POST /api/auth/login/` – same response
+- `POST /api/auth/logout/` – `{ refresh: "<token>" }`
+- `GET /api/auth/me/` – current user info
 
-Scan the QR code with the Expo Go app (iOS or Android). Your device must be on the same network.
+**Portfolio**
+- `GET /api/portfolio/` – user's portfolio (balances + allocations)
+- `PUT /api/portfolio/update_allocations/` – replace allocations
 
-**Development build:**
+**Transactions**
+- `GET /api/transactions/` – list, filter with `?type=deposit` or `?start_date=...`
+- `POST /api/transactions/deposit/` – `{ amount }` (updates portfolio)
+- `POST /api/transactions/withdraw/` – `{ amount }` (checks balance)
+- `POST /api/transactions/rebalance/` – `{ allocations: [{ name, percentage }] }`
 
-```sh
-npx expo run:ios    # iOS
-npx expo run:android # Android
-```
+**Calculations**
+- `GET /api/calculations/summary/` – aggregated balances + daily change
+- `GET /api/calculations/history/` – weekly performance (mock structure)
 
-> iOS development builds require an Apple Developer account. Android development builds require Android SDK.
+Mobile app calls these directly; token refresh is handled automatically.
 
-## Project Structure
+---
 
-```
-apps/mobile/          # React Native / Expo app
-  app/                # Expo Router file-based routes
-    _layout.tsx       # Root layout (font loading, global styles)
-    (tabs)/           # Tab navigator
-      _layout.tsx     # Tab bar config
-      index.tsx       # Home Dashboard
-      history.tsx     # Transaction History
-    deposit.tsx       # Deposit confirmation screen
-    rebalance.tsx     # Rebalance confirmation screen
-  components/         # Reusable UI components
-  context/            # React contexts (auth, etc.)
-  services/           # API service layer
-  lib/                # Utilities and helpers
-  global.css          # Tailwind entry point
-  tailwind.config.js  # Custom design tokens
-backend/              # Django REST API
-  api/                # Core app (portfolio, transactions, calculations)
-  accounts/           # Auth app (register, login, logout)
-  wasat_api/          # Django project settings
-```
-
-## Design System
-
-The primary color is `#16D1A6` (teal-green), mapped to the Tailwind `primary` token.
-
-## Existing Screens Documentation
-
-### 1. Home Dashboard — `app/(tabs)/index.tsx`
-
-**Purpose:** Main portfolio overview screen.
-**Contents:**
-- User avatar + app title "Wasat"
-- Total Portfolio Balance ($124,500.00) with daily change indicator (+1.02%)
-- Three Quick Action buttons: **Deposit**, **Withdraw**, **Rebalance**
-  - Deposit → navigates to `app/deposit.tsx`
-  - Withdraw → navigates to `/withdraw` (**NOTE:** this screen does NOT exist yet)
-  - Rebalance → navigates to `app/rebalance.tsx`
-- Two balance cards: Invested Balance ($112,050) and Available Cash ($12,450), each with color-coded allocation bars
-- "Top Ethical Performers" section listing Green Energy Fund ($34,200, +2.4%) and Fair Trade Tech ($18,450, +1.1%) with ESG/Halal and Low Carbon tags
-
-**Data dependencies:** Currently uses hardcoded mock values. Needs API integration for real portfolio data.
-
-### 2. Transaction History — `app/(tabs)/history.tsx`
-
-**Purpose:** Browse past financial transactions with filtering.
-**Contents:**
-- User avatar + app title "Wasat"
-- "HISTORY" heading
-- Filter chips: All | Deposits | Withdrawals | Rebalances
-- Transaction cards showing: type icon, title, description, date
-- Hardcoded mock transactions (2 rebalances, 2 deposits, 1 withdrawal)
-- Empty state shown when filter yields no results
-
-**Data dependencies:** Currently hardcoded `HistoryTransaction[]`. Needs to fetch from a backend with CRUD endpoints. Calculations (balances, totals) need to be derived from stored records.
-
-### 3. Deposit Confirmation — `app/deposit.tsx`
-
-**Purpose:** Shows deposit transaction details after a deposit is made.
-**Contents:**
-- Header with back arrow + "Deposit" title
-- Status badge (Completed/Pending/Failed) + date/time
-- Amount displayed prominently ($500.00)
-- Details card with: Transaction ID (WST-9827364), From account (Cash Account), To account (Investment Portfolio), Fee ($0.00)
-- "View Receipt" button (currently logs to console)
-- "Back to Home" button
-
-**Data dependencies:** Static mock props. Needs to receive real transaction data after a deposit is submitted via a form (deposit form screen does not exist yet — only the confirmation view).
-
-### 4. Rebalance Confirmation — `app/rebalance.tsx`
-
-**Purpose:** Shows rebalance transaction details after a portfolio rebalance.
-**Contents:**
-- Header with back arrow + "Rebalance" title
-- Success graphic with checkmark + status badge (Completed/Pending/Failed)
-- Context card showing date (Monday, 08 February 2024), time (03:45 PM), description
-- Target Allocations section with allocation cards: US ETF (20%), Europe ETF (30%), Tech ETF (50%)
-- "View Receipt" button (currently logs to console)
-- Fixed bottom "OK" button → navigates back to Home
-
-**Data dependencies:** Static mock props. Needs to fetch allocation data from backend and record rebalance operations in the database.
-
-### 5. Components — `components/`
-
-| Component | File | Usage |
-|---|---|---|
-| `AllocationChart` | `AllocationChart.tsx` | Renders allocation bars with labels |
-| `TransactionRow` | `TransactionRow.tsx` | Transaction list item (used in history — though history.tsx has its own inline version) |
-| `InfoRow` | `InfoRow.tsx` | Label-value row with optional border/icon |
-| `Button` | `Button.tsx` | Primary/secondary/outline button |
-| `StatusBadge` | `StatusBadge.tsx` | Completed/Pending/Failed pill badge |
-
-### 6. Missing Screens
-
-- **Withdraw — `app/withdraw.tsx`**: Referenced from the Home screen's "Withdraw" button but does not exist. Needs to be built.
-- **Deposit Form**: Only the confirmation screen exists. A form screen to initiate a deposit (enter amount, select account) is missing.
-- **Login / Register**: No authentication screens exist.
-
-## Backend Requirements (To Build)
-
-These are the backend features needed for a demo:
-
-### A. Authentication
-- Login screen with email/password
-- Logout functionality
-- (Optional) Simple registration screen
-- JWT or session-based auth (demo-grade is fine)
-
-### B. CRUD API Endpoints
-
-| Entity | Operations | Notes |
-|---|---|---|
-| **Transactions** | Create, Read, List, Delete | Records for deposits, withdrawals, rebalances |
-| **Portfolio** | Read, Update | Balance data, allocation percentages |
-| **Users** | Create (register), Read (profile) | Linked to auth |
-| **Calculations** | Read | History-based computations (e.g., total invested, gains/losses, allocation drift) stored/derived in DB |
-
-### C. Specific Data to Record
-- **Transfers** (deposits/withdrawals): amount, from account, to account, timestamp, status, fee, transaction ID
-- **Rebalances**: before/after allocation percentages, timestamp, status
-- **History calculations**: running totals, daily change percentages, portfolio distribution
-
-### D. API Structure (Suggested)
+## Project structure 
 
 ```
-POST   /api/auth/login
-POST   /api/auth/logout
-POST   /api/auth/register
-
-GET    /api/portfolio         # Current portfolio data
-PUT    /api/portfolio         # Update allocations
-
-GET    /api/transactions      # List all (with filter params: type, date range)
-POST   /api/transactions      # Create a new transaction record
-GET    /api/transactions/:id  # Get single transaction details
-DELETE /api/transactions/:id  # Delete a transaction
-
-GET    /api/calculations      # Aggregated calculations (totals, changes)
+apps/mobile/
+  app/                # Expo Router screens
+    (auth)/           # login, register
+    (tabs)/           # home (dashboard), history
+    deposit.tsx       # deposit form
+    withdraw.tsx      # withdraw form
+    rebalance.tsx     # rebalance edit + confirmation
+  components/         # AllocationChart, Button, etc.
+  context/            # AuthContext (global auth state)
+  services/           # api.ts (axios interceptor) + auth.ts
+backend/
+  api/                # portfolio, transactions, calculations
+  accounts/           # custom auth endpoints
+  wasat_api/          # Django settings, urls
 ```
 
-The frontend currently uses hardcoded/mock data. All screens need to be wired to call these API endpoints. Backend can use any stack (Node.js/Express, Python/FastAPI, etc.) — this is just a demo.
+Omitted for demo scope:
+- No pagination on transactions (small dataset)
+- No real‑time updates (refresh button suffices)
+- No email verification
 
-## Features
+---
 
-- **Home Dashboard** — Portfolio overview with allocation chart and account summary
-- **Deposit Flow** — Add funds to investment account
-- **Rebalance Flow** — Adjust portfolio allocation
-- **Transaction History** — Browse past deposits and rebalances
-- **Light/Dark Mode** — Automatic theme switching via system preference
-- **4-Screen Navigation** — Tab bar with Home and History; modal routes for Deposit and Rebalance
+## Screens and flow
 
-## Notes
+**Login / Register** – App starts here. After success, JWT stored in AsyncStorage, attached to every API call.
 
-- This is a UI implementation translated from designs created in Google Stitch.
-- Iconography uses Google Material Symbols via `@expo/vector-icons` (MaterialCommunityIcons).
-- The iOS experience follows Apple HIG conventions (safe areas, tab bar, modal presentation).
-- Styling is entirely Tailwind via NativeWind with no `StyleSheet.create()`.
-- Run `npx tsc --noEmit` for type checking.
+**Home dashboard** – Shows real portfolio data from `GET /api/portfolio/` and `GET /api/calculations/summary/`.  
+Action buttons:
+- **Deposit** → form → API call → confirmation → refresh dashboard
+- **Withdraw** – same, but API checks available cash
+- **Rebalance** → shows current allocations → edit percentages → submit to rebalance endpoint
+
+**History** – Fetches `GET /api/transactions/`, filters client‑side by type. Shows amount, date, status.
+
+**Design** – Primary colour `#16D1A6`, Montserrat font, Tailwind spacing. iOS safe areas, tab bar matches HIG.
+
+---
+
+## What I'd improve for production
+
+- SQLite → PostgreSQL (or MongoDB if document model fits better)
+- Add pagination to transaction history
+- Cache portfolio data (React Query or similar)
+- More tests (only happy paths now)
+- Environment variables for API URLs (no hard‑coded localhost)
+
+But for a demo that shows backend + mobile integration, auth, and financial logic – it's solid.
+
+---
+
+## Quick checks
+
+```bash
+# Type check mobile app
+cd apps/mobile
+pnpm tsc --noEmit
+
+# Backend tests
+cd backend
+python manage.py test
+```
+
+---
+
+## License
+
+Demo project – no restrictions.
+
+---
+
+That's it. Clone, run, tap around. Everything should work out of the box.
