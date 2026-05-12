@@ -2,9 +2,16 @@ import { useRouter } from "expo-router";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAuth } from "../../context/AuthContext";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/(auth)/login");
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background dark:bg-background-dark">
@@ -15,26 +22,41 @@ export default function HomeScreen() {
             <View className="w-10 h-10 rounded-full bg-surface-container items-center justify-center overflow-hidden">
               <MaterialCommunityIcons name="account" size={24} color="#3c4a44" />
             </View>
-            <Text className="font-montserrat font-bold text-xl text-primary">
-              Wasat
-            </Text>
+            <View>
+              <Text className="font-montserrat font-bold text-xl text-primary">
+                Wasat
+              </Text>
+              {user && (
+                <Text className="font-montserrat text-sm text-gray-500 dark:text-gray-400">
+                  Welcome, {user.name}
+                </Text>
+              )}
+            </View>
           </View>
-          <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center">
-            <MaterialCommunityIcons name="bell-outline" size={24} color="#16D1A6" />
-          </TouchableOpacity>
+          <View className="flex-row gap-2">
+            <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center">
+              <MaterialCommunityIcons name="bell-outline" size={24} color="#16D1A6" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="w-10 h-10 rounded-full items-center justify-center"
+            >
+              <MaterialCommunityIcons name="logout" size={24} color="#16D1A6" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Portfolio Balance Hero */}
         <View className="items-center py-8">
-          <Text className="font-montserrat text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 tracking-wider">
+          <Text className="font-montserrat text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 tracking-wider">
             Total Portfolio Balance
           </Text>
-          <Text className="font-montserrat font-bold text-3xl text-black dark:text-white mb-1">
+          <Text className="font-montserrat font-bold text-4xl text-black dark:text-white mb-1">
             $124,500.00
           </Text>
           <View className="flex-row items-center gap-1 bg-primary/10 px-3 py-1 rounded-full mt-2">
             <MaterialCommunityIcons name="trending-up" size={16} color="#16D1A6" />
-            <Text className="font-montserrat text-xs font-semibold text-primary">
+            <Text className="font-montserrat text-sm font-semibold text-primary">
               +$1,250.00 (1.02%) Today
             </Text>
           </View>
@@ -49,7 +71,7 @@ export default function HomeScreen() {
             <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
               <MaterialCommunityIcons name="download" size={24} color="white" />
             </View>
-            <Text className="font-montserrat text-xs font-semibold text-white">
+            <Text className="font-montserrat text-sm font-semibold text-white">
               Deposit
             </Text>
           </TouchableOpacity>
@@ -60,7 +82,7 @@ export default function HomeScreen() {
             <View className="w-10 h-10 rounded-full bg-tertiary/10 items-center justify-center">
               <MaterialCommunityIcons name="upload" size={24} color="#005db7" />
             </View>
-            <Text className="font-montserrat text-xs font-semibold text-black dark:text-white">
+            <Text className="font-montserrat text-sm font-semibold text-black dark:text-white">
               Withdraw
             </Text>
           </TouchableOpacity>
@@ -71,7 +93,7 @@ export default function HomeScreen() {
             <View className="w-10 h-10 rounded-full bg-secondary/10 items-center justify-center">
               <MaterialCommunityIcons name="sync" size={24} color="#8142a4" />
             </View>
-            <Text className="font-montserrat text-xs font-semibold text-black dark:text-white">
+            <Text className="font-montserrat text-sm font-semibold text-black dark:text-white">
               Rebalance
             </Text>
           </TouchableOpacity>
@@ -128,7 +150,7 @@ export default function HomeScreen() {
               </Text>
             </View>
             <TouchableOpacity className="flex-row items-center gap-1">
-              <Text className="font-montserrat text-xs font-semibold text-primary">
+              <Text className="font-montserrat text-sm font-semibold text-primary">
                 View All
               </Text>
               <MaterialCommunityIcons name="chevron-right" size={16} color="#16D1A6" />
@@ -142,17 +164,17 @@ export default function HomeScreen() {
                   <MaterialCommunityIcons name="leaf" size={24} color="#16D1A6" />
                 </View>
                 <View>
-                  <Text className="font-montserrat text-xs font-semibold text-black dark:text-white">
+                  <Text className="font-montserrat text-sm font-semibold text-black dark:text-white">
                     Green Energy Fund
                   </Text>
                   <View className="flex-row gap-1 mt-1">
                     <View className="px-2 py-0.5 bg-surface-container-high dark:bg-gray-600 rounded-full">
-                      <Text className="font-montserrat text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                      <Text className="font-montserrat text-xs font-semibold text-gray-500 dark:text-gray-400">
                         ESG
                       </Text>
                     </View>
                     <View className="px-2 py-0.5 bg-surface-container-high dark:bg-gray-600 rounded-full">
-                      <Text className="font-montserrat text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                      <Text className="font-montserrat text-xs font-semibold text-gray-500 dark:text-gray-400">
                         Halal
                       </Text>
                     </View>
@@ -160,10 +182,10 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View className="items-end">
-                <Text className="font-montserrat text-xs font-semibold text-black dark:text-white">
+                <Text className="font-montserrat text-sm font-semibold text-black dark:text-white">
                   $34,200
                 </Text>
-                <Text className="font-montserrat text-[10px] font-semibold text-primary">
+                <Text className="font-montserrat text-sm font-semibold text-primary">
                   +2.4%
                 </Text>
               </View>
@@ -175,12 +197,12 @@ export default function HomeScreen() {
                   <MaterialCommunityIcons name="handshake" size={24} color="#8142a4" />
                 </View>
                 <View>
-                  <Text className="font-montserrat text-xs font-semibold text-black dark:text-white">
+                  <Text className="font-montserrat text-sm font-semibold text-black dark:text-white">
                     Fair Trade Tech
                   </Text>
                   <View className="flex-row gap-1 mt-1">
                     <View className="px-2 py-0.5 bg-surface-container-high dark:bg-gray-600 rounded-full">
-                      <Text className="font-montserrat text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                      <Text className="font-montserrat text-xs font-semibold text-gray-500 dark:text-gray-400">
                         Low Carbon
                       </Text>
                     </View>
@@ -188,10 +210,10 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View className="items-end">
-                <Text className="font-montserrat text-xs font-semibold text-black dark:text-white">
+                <Text className="font-montserrat text-sm font-semibold text-black dark:text-white">
                   $18,450
                 </Text>
-                <Text className="font-montserrat text-[10px] font-semibold text-primary">
+                <Text className="font-montserrat text-sm font-semibold text-primary">
                   +1.1%
                 </Text>
               </View>

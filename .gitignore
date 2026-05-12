@@ -1,44 +1,26 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Node
+node_modules
+.pnpm-store
 
-# dependencies
-node_modules/
-opencode.json
-.env
 # Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+.expo
+dist
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.sqlite3
+db.sqlite3
+
+# Environment
+.env
+.env.local
+opencode.json
+
+# NativeWind generated
 nativewind-env.d.ts
-types/
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
 
 # macOS
 .DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
