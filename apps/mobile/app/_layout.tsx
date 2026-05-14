@@ -30,8 +30,7 @@ function RootLayoutNav() {
     <Stack screenOptions={stackScreenOptions}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="deposit" />
-      <Stack.Screen name="rebalance" />
+      <Stack.Screen name="buy" />
     </Stack>
   );
 }

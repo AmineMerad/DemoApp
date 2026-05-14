@@ -15,3 +15,4 @@ services:
         value: .onrender.com
       - key: CORS_ALLOW_ALL_ORIGINS
         value: true
+`
